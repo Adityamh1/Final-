@@ -1,0 +1,36 @@
+{
+  "entities": {
+    "Listing": {
+      "title": "Listing",
+      "description": "A classified advertisement for an animal or agricultural item",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "category": { "type": "string" },
+        "breed": { "type": "string", "maxLength": 100 },
+        "price": { "type": "number" },
+        "age": { "type": "string", "maxLength": 50 },
+        "location": { "type": "string", "maxLength": 150 },
+        "district": { "type": "string", "maxLength": 50 },
+        "photo": { "type": "string", "maxLength": 1000000 },
+        "sellerName": { "type": "string", "maxLength": 100 },
+        "phone": { "type": "string", "maxLength": 15 },
+        "details": { "type": "string", "maxLength": 2000 },
+        "milkCapacity": { "type": "string", "maxLength": 50 },
+        "gender": { "type": "string" },
+        "createdAt": { "type": "string" },
+        "createdAtTime": { "type": "number" },
+        "hidePhone": { "type": "boolean" },
+        "isPremium": { "type": "boolean" },
+        "deviceId": { "type": "string", "maxLength": 128 }
+      },
+      "required": ["category", "breed", "price", "age", "location", "district", "sellerName", "phone", "details", "createdAt", "createdAtTime"]
+    }
+  },
+  "firestore": {
+    "/listings/{listingId}": {
+      "schema": "Listing",
+      "description": "Collection of all animal advertisements"
+    }
+  }
+}

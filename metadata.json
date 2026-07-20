@@ -1,0 +1,8 @@
+{
+  "name": "Final Pashudhan ",
+  "description": "Imported from GitHub: Adityamh1/Pashu",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

@@ -1,0 +1,85 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // 1. Global Safety Net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // 3. Primitive Definitions & Reusable Global Helpers
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isSignedIn() &&
+             request.auth.token.email == 'akmhetre09@gmail.com' &&
+             request.auth.token.email_verified == true;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    // 2. Validation Blueprints (Anti-Update-Gap)
+    function isValidListing(data) {
+      return data.category is string && data.category.size() <= 20
+        && data.breed is string && data.breed.size() <= 100
+        && data.price is number && data.price >= 0
+        && data.age is string && data.age.size() <= 50
+        && data.location is string && data.location.size() <= 150
+        && data.district is string && data.district.size() <= 50
+        && data.photo is string && data.photo.size() <= 1000000
+        && data.sellerName is string && data.sellerName.size() <= 100
+        && data.phone is string && data.phone.size() <= 15
+        && data.details is string && data.details.size() <= 2000
+        && data.createdAt is string && data.createdAt.size() <= 50
+        && data.createdAtTime is number
+        && (!data.keys().hasAny(['milkCapacity']) || (data.milkCapacity is string && data.milkCapacity.size() <= 50))
+        && (!data.keys().hasAny(['gender']) || (data.gender is string && data.gender.size() <= 20))
+        && (!data.keys().hasAny(['hidePhone']) || data.hidePhone is bool)
+        && (!data.keys().hasAny(['isPremium']) || data.isPremium is bool)
+        && (!data.keys().hasAny(['deviceId']) || (data.deviceId is string && data.deviceId.size() <= 128))
+        && data.keys().hasAll(['category', 'breed', 'price', 'age', 'location', 'district', 'sellerName', 'phone', 'details', 'createdAt', 'createdAtTime'])
+        && data.keys().size() <= 16;
+    }
+
+    // Listings Collection
+    match /listings/{listingId} {
+      allow get: if true;
+      allow list: if true;
+
+      allow create: if isValidId(listingId)
+                    && isSignedIn()
+                    && isValidListing(incoming())
+                    && incoming().deviceId == request.auth.uid
+                    && (incoming().isPremium == false || isAdmin());
+
+      allow update: if isValidId(listingId)
+                    && isSignedIn()
+                    && isValidListing(incoming())
+                    && (
+                      isAdmin() || (
+                        existing().deviceId == request.auth.uid
+                        && incoming().deviceId == existing().deviceId
+                        && incoming().createdAt == existing().createdAt
+                        && incoming().createdAtTime == existing().createdAtTime
+                        && incoming().isPremium == existing().isPremium
+                      )
+                    );
+
+      allow delete: if isValidId(listingId)
+                    && isSignedIn()
+                    && (isAdmin() || existing().deviceId == request.auth.uid);
+    }
+  }
+}
